@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recherche dans PDF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .search-form {
+            background: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #555;
+        }
+        .results {
+            margin-top: 30px;
+        }
+        .result-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #333;
+        }
+        .page-number {
+            font-weight: bold;
+            color: #333;
+        }
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recherche de mots-clés dans PDF</h1>
+    
+    <div class="search-form">
+        <form method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Fichier PDF:</label>
+                <input type="file" name="file" id="file" accept=".pdf" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="keyword">Mot-clé à rechercher:</label>
+                <input type="text" name="keyword" id="keyword" required>
+            </div>
+            
+            <button type="submit">Rechercher</button>
+        </form>
+    </div>
+    
+    {% if keyword %}
+    <div class="results">
+        <h2>Résultats pour "{{ keyword }}"</h2>
+        {% if results %}
+            <p>{{ results|length }} occurrence(s) trouvée(s):</p>
+            
+            {% for result in results %}
+            <div class="result-item">
+                <span class="page-number">Page {{ result.page }}:</span>
+                <p>{{ result.text|replace(keyword, '<span class="highlight">' ~ keyword ~ '</span>')|safe }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>Aucun résultat trouvé pour "{{ keyword }}"</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</body>
+</html>
