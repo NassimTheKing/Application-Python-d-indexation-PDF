@@ -1,0 +1,58 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  # Tag de l'image Docker
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  # Nom du conteneur sur le serveur EC2
+  APP_NAME: flask-pdf-indexer
+  # Adresse IP publique de votre instance EC2 - VERIFIEZ CETTE VALEUR !
+  EC2_HOST: 51.20.65.117 
+
+# --- Étape 1: Construction de l'image Docker et Push vers le registre GitLab ---
+build_image:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    # 1. Connexion au Container Registry de GitLab
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    # 2. Construction de l'image Docker (utilise le Dockerfile)
+    - docker build -t $IMAGE_TAG .
+    # 3. Pousser l'image vers le registre GitLab
+    - docker push $IMAGE_TAG
+  only:
+    - master 
+
+# --- Étape 2: Déploiement sur le Serveur EC2 via SSH ---
+deploy_to_ec2:
+  stage: deploy
+  image: alpine/curl:latest
+  before_script:
+    # Configure SSH avec la clé privée sécurisée
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    # Ajoute la clé hôte de l'EC2 
+    - ssh-keyscan $EC2_HOST >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    # Se connecte à l'EC2 et exécute les commandes Docker
+    - ssh ubuntu@$EC2_HOST "
+        # 1. Connexion au registre GitLab (pour tirer l'image)
+        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
+        # 2. Arrête et supprime l'ancien conteneur
+        docker stop $APP_NAME || true && docker rm $APP_NAME || true &&
+        # 3. Tire la nouvelle image du registre
+        docker pull $IMAGE_TAG &&
+        # 4. Lance le nouveau conteneur (mappage 80:80)
+        docker run -d --name $APP_NAME -p 80:80 $IMAGE_TAG
+      "
+  only:
+    - master
+  environment:
+    name: production
