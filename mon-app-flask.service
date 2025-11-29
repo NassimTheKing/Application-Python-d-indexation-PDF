@@ -7,7 +7,7 @@ Type=simple
 User=ubuntu
 WorkingDirectory=/home/ubuntu/app_flask
 Environment="PATH=/home/ubuntu/app_flask/venv/bin"
-ExecStart=/home/ubuntu/app_flask/venv/bin/python app.py
+ExecStart=/home/ubuntu/app_flask/venv/bin/python pdf.py
 Restart=always
 RestartSec=10
 
