@@ -2,6 +2,7 @@ stages:
   - build
   - deploy
 
+
 variables:
   # Tag de l'image Docker
   IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
