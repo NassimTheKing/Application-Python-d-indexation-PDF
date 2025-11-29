@@ -1,0 +1,15 @@
+[Unit]
+Description=Application Flask - Indexation PDF
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/app_flask
+Environment="PATH=/home/ubuntu/app_flask/venv/bin"
+ExecStart=/home/ubuntu/app_flask/venv/bin/python app.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
